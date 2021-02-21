@@ -5,6 +5,7 @@ import io.practice.moviecatalogservice.Model.MovieInformation;
 import io.practice.moviecatalogservice.Model.Rating;
 import io.practice.moviecatalogservice.Model.UserRatings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,20 +21,23 @@ import java.util.List;
 public class MovieCatalogController {
 
     @Autowired
+    private DiscoveryClient discoveryClient;
+
+    @Autowired
     RestTemplate restTemplate;
 
     @RequestMapping("/{userId}")
     public List<MovieCatalog> getMovieCatalog(@PathVariable("userId") String userId){
 
         //send userId and fetch Ratings data
-        UserRatings userRatings = restTemplate.getForObject("http://localhost:9003/ratings/"+userId,
+        UserRatings userRatings = restTemplate.getForObject("http://RATING-INFO-SERVICE/ratings/"+userId,
                 UserRatings.class);
 
         MovieInformation movieInformation = null;
         List<MovieCatalog> mc = new ArrayList<MovieCatalog>();
         //User movieId from Ratings data and send it to movie info
         for(Rating rating : userRatings.getUserRating()){
-            movieInformation = restTemplate.getForObject("http://localhost:9002/movieInfo/"+rating
+            movieInformation = restTemplate.getForObject("http://MOVIE-INFO-SERVICE/movieInfo/"+rating
                           .getMovieId(), MovieInformation.class);
           mc.add(new MovieCatalog(movieInformation.getMovieName(),movieInformation.getMovieDesc(),rating.getRating()));
         }
